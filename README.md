@@ -66,6 +66,6 @@ Este projeto é um esforço pessoal de aprendizado e desenvolvimento. Sugestões
 
 ## Licença
 
-Este projeto está licenciado sob a Licença MIT. (Você pode manter esta licença, que é bem comum e permissiva).
+Este projeto está licenciado sob a Licença MIT. 
 
 ---
