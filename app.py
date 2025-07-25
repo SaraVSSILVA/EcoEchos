@@ -1,5 +1,7 @@
+import streamlit as st
 import random
 
+# --- FATORES DE EMISSÃO ---
 FATORES_EMISSAO = {
     "energia_combustivel": {
         "eletricidade_kWh": 0.065,
@@ -58,6 +60,7 @@ FATORES_EMISSAO = {
     }
 }
 
+# --- DICAS DE REDUÇÃO (MANTIDAS EXATAMENTE COMO NO SEU CÓDIGO) ---
 DICAS_REDUCAO = {
     "energia_combustivel": [
         "Desligue as luzes, meliante! Não estamos iluminando um estádio. Ou você gosta de pagar caro e poluir?",
@@ -110,6 +113,7 @@ DICAS_REDUCAO = {
     ]
 }
 
+# --- FUNÇÕES DE CÁLCULO (MANTIDAS EXATAMENTE COMO NO SEU CÓDIGO) ---
 def calcular_pegada_energia(consumo_kwh, num_botijoes_gas_13kg):
     pegada = 0
     pegada += consumo_kwh * FATORES_EMISSAO["energia_combustivel"]["eletricidade_kWh"]
@@ -119,13 +123,13 @@ def calcular_pegada_energia(consumo_kwh, num_botijoes_gas_13kg):
 def calcular_pegada_transporte_individual_combustivel(distancia_km, tipo_combustivel):
     litros_consumidos = 0
     if tipo_combustivel == "gasolina":
-        litros_consumidos = distancia_km / 10.0
+        litros_consumidos = distancia_km / 10.0 # Assumindo 10km/L para gasolina
         return litros_consumidos * FATORES_EMISSAO["energia_combustivel"]["gasolina_litro"]
     elif tipo_combustivel == "etanol":
-        litros_consumidos = distancia_km / 7.0
+        litros_consumidos = distancia_km / 7.0 # Assumindo 7km/L para etanol
         return litros_consumidos * FATORES_EMISSAO["energia_combustivel"]["etanol_litro"]
     elif tipo_combustivel == "diesel":
-        litros_consumidos = distancia_km / 12.0
+        litros_consumidos = distancia_km / 12.0 # Assumindo 12km/L para diesel
         return litros_consumidos * FATORES_EMISSAO["energia_combustivel"]["diesel_litro"]
     else:
         return 0
@@ -133,8 +137,8 @@ def calcular_pegada_transporte_individual_combustivel(distancia_km, tipo_combust
 def calcular_pegada_transporte_eletrico(distancia_km, tipo_veiculo):
     if tipo_veiculo == "carro_eletrico":
         return distancia_km * FATORES_EMISSAO["transporte"]["carro_eletrico_km"]
-    elif tipo_veiculo == "moto":
-        return distancia_km * FATORES_EMISSAO["transporte"]["moto_km"]
+    elif tipo_veiculo == "moto_eletrica": # Alterado de "moto" para "moto_eletrica" para clareza
+        return distancia_km * FATORES_EMISSAO["transporte"]["moto_km"] # Usa o fator de moto normal, mas agora é para elétrica
     else:
         return 0
 
@@ -167,11 +171,15 @@ def calcular_pegada_alimentacao(
     total += kg_vegetais * FATORES_EMISSAO["alimentacao"]["vegetais_kg"]
     return total
 
-def calcular_pegada_habitacao(num_comodos, horas_ar_condicionado, horas_aquecedor):
+def calcular_pegada_habitacao(num_comodos, horas_ar_condicionado_mensal, horas_aquecedor_mensal):
     total = 0
     total += num_comodos * FATORES_EMISSAO["habitacao"]["residencia_comodo"]
-    total += horas_ar_condicionado * FATORES_EMISSAO["habitacao"]["ar_condicionado_hora"]
-    total += horas_aquecedor * FATORES_EMISSAO["habitacao"]["aquecedor_hora"]
+    # Converter horas/mês para horas/dia para o fator do dicionário (se o fator for por hora/dia)
+    # Pelo seu main.py, horas_ar_condicionado_mensal e horas_aquecedor_mensal JÁ ESTÃO MULTIPLICADAS POR 30
+    # Então, se o fator de emissão no dicionário for por HORA (e não por hora/dia), a conta já está certa.
+    # Vou considerar que o fator no dicionário é por HORA e as entradas são total de horas no mês.
+    total += horas_ar_condicionado_mensal * FATORES_EMISSAO["habitacao"]["ar_condicionado_hora"]
+    total += horas_aquecedor_mensal * FATORES_EMISSAO["habitacao"]["aquecedor_hora"]
     return total
 
 def calcular_pegada_consumo(
@@ -199,66 +207,57 @@ def calcular_pegada_residuos(num_sacos_lixo_100l, kg_lixo_reciclavel, kg_eletron
     total += kg_compostagem * FATORES_EMISSAO["residuos"]["compostagem_kg"]
     return total
 
-def calcular_pegada_estilo_vida(num_voos_eventos_ano, horas_streaming, num_compras_online_mes):
+def calcular_pegada_estilo_vida(num_voos_eventos_ano, horas_streaming_mensal, num_compras_online_mes):
     total = 0
-    total += (num_voos_eventos_ano / 12) * FATORES_EMISSAO["estilo_vida"]["voos_eventos_ano"]
-    total += horas_streaming * FATORES_EMISSAO["estilo_vida"]["streaming_hora"]
+    total += (num_voos_eventos_ano / 12) * FATORES_EMISSAO["estilo_vida"]["voos_eventos_ano"] # Convertendo anual para mensal
+    total += horas_streaming_mensal * FATORES_EMISSAO["estilo_vida"]["streaming_hora"]
     total += num_compras_online_mes * FATORES_EMISSAO["estilo_vida"]["compras_online_mes"]
     return total
 
-def calcular_creditos_sustentaveis(num_arvores_plantadas, kg_creditos_carbono):
+def calcular_creditos_sustentaveis(num_arvores_plantadas_mensal, kg_creditos_carbono): # Ajustei o nome do parâmetro
     total = 0
-    total += num_arvores_plantadas * FATORES_EMISSAO["sustentavel"]["arvores_plantadas"]
+    total += num_arvores_plantadas_mensal * FATORES_EMISSAO["sustentavel"]["arvores_plantadas"]
     total += kg_creditos_carbono * FATORES_EMISSAO["sustentavel"]["creditos_carbono_kg"]
     return total
 
-def obter_input_numerico(pergunta, tipo=float):
-    while True:
-        try:
-            resposta = tipo(input(pergunta + " "))
-            if resposta < 0:
-                print("Por favor, digite um número igual ou maior que zero.")
-            else:
-                return resposta
-        except ValueError:
-            print(f"Entrada inválida. Por favor, digite um número válido (inteiro ou decimal).")
-
+# --- FUNÇÕES DE FEEDBACK E DICAS ADAPTADAS PARA STREAMLIT ---
 def exibir_resumo_e_feedback_total(pegada_total_kgco2e):
-    print("\n" + "="*40)
-    print(f"SUA PEGADA DE CARBONO TOTAL MENSAL É: {pegada_total_kgco2e:.2f} kgCO2e")
-    print("="*40)
+    st.markdown("---")
+    st.header(f"SUA PEGADA DE CARBONO TOTAL MENSAL É: {pegada_total_kgco2e:.2f} kgCO2e")
+    st.markdown("---")
 
-    print("\n--- Análise da sua Pegada Criminal... digo, de Carbono ---")
+    st.subheader("--- Análise da sua Pegada Criminal... digo, de Carbono ---")
 
     if pegada_total_kgco2e <= 150:
-        print("Parabéns, seu pequeno elfo da floresta! Sua pegada é tão leve que mal deixou rastro. O planeta te agradece... por enquanto. Continue assim, ou a gente te manda para a reciclagem!")
+        st.success("🎉 Parabéns, seu pequeno elfo da floresta! Sua pegada é tão leve que mal deixou rastro. O planeta te agradece... por enquanto. Continue assim, ou a gente te manda para a reciclagem!")
     elif 150 < pegada_total_kgco2e <= 400:
-        print("Bom, pelo menos você tenta, né?. Nem um pé-grande, nem uma fada. Parece que você está tentando, mas ainda dá para apertar um pouco mais essa bota. O planeta está de olho em você!")
+        st.info("👍 Bom, pelo menos você tenta, né?. Nem um pé-grande, nem uma fada. Parece que você está tentando, mas ainda dá para apertar um pouco mais essa bota. O planeta está de olho em você!")
     elif 400 < pegada_total_kgco2e <= 800:
-        print("Olha só, achamos o Pé-Médio! Sua pegada já está deixando uma marca considerável. Talvez seja hora de trocar o carro por uma bicicleta... ou por um par de pernas. O aquecimento global manda lembranças!")
+        st.warning("🧐 Olha só, achamos o Pé-Médio! Sua pegada já está deixando uma marca considerável. Talvez seja hora de trocar o carro por uma bicicleta... ou por um par de pernas. O aquecimento global manda lembranças!")
     elif 800 < pegada_total_kgco2e <= 1500:
-        print("Cuidado para não esmagar o planeta! Sua pegada está ficando GIGANTE. Será que você está andando de dinossauro ou algo assim? O IBAMA já está a caminho, só pra avisar.")
+        st.error("🚨 Cuidado para não esmagar o planeta! Sua pegada está ficando GIGANTE. Será que você está andando de dinossauro ou algo assim? O IBAMA já está a caminho, só pra avisar.")
     else:
-        print("PARABÉNS! Você deve ser um dos maiores contribuidores para o APOCALIPSE climático! Tem nem o que falar, vai plantar uma árvore, ou melhor, um bosque inteiro! O planeta está chorando... e você é o motivo.")
+        st.error("🔥 PARABÉNS! Você deve ser um dos maiores contribuidores para o APOCALIPSE climático! Tem nem o que falar, vai plantar uma árvore, ou melhor, um bosque inteiro! O planeta está chorando... e você é o motivo.")
 
-    print("\nLembre-se: cada quilo de CO2e conta. Ou não. Depende do quanto você se importa com o futuro... e com a ironia do destino.")
-    print("Obrigada por usar o EcoSimulador. Agora vá e faça algo útil pelo planeta... ou não. A escolha é sua, meliante ambiental.")
+    st.markdown("_Lembre-se: cada quilo de CO2e conta. Ou não. Depende do quanto você se importa com o futuro... e com a ironia do destino._")
+    st.markdown("_Obrigada por usar o EcoSimulador. Agora vá e faça algo útil pelo planeta... ou não. A escolha é sua, meliante ambiental._")
+
 
 def exibir_dicas_personalizadas(pegadas_por_categoria):
-    print("\n--- O Oráculo do Carbono Revela: Onde Você Está Falhando Mais (e como remediar, talvez) ---")
+    st.subheader("\n--- O Oráculo do Carbono Revela: Onde Você Está Falhando Mais (e como remediar, talvez) ---")
 
     categorias_com_impacto = {
         cat: val for cat, val in pegadas_por_categoria.items() if val > 5
     }
 
     if not categorias_com_impacto:
-        print("Sua pegada é tão mínima que não consigo nem encontrar um 'maior impacto'. Ou você é um santo, ou mentiu em tudo. Sem dicas para você, prodígio ambiental!")
+        st.info("Sua pegada é tão mínima que não consigo nem encontrar um 'maior impacto'. Ou você é um santo, ou mentiu em tudo. Sem dicas para você, prodígio ambiental!")
     else:
         top_categorias = sorted(categorias_com_impacto.items(), key=lambda item: item[1], reverse=True)
 
-        num_dicas = min(len(top_categorias), 3)
+        num_dicas = min(len(top_categorias), 3) # Exibir até 3 categorias de maior impacto
 
-        print(f"Pelas minhas contas (e minha paciência), suas maiores fontes de 'poluição gloriosa' são:")
+        st.write("Pelas minhas contas (e minha paciência), suas maiores fontes de 'poluição gloriosa' são:")
         for i in range(num_dicas):
             categoria_nome_tecnico = top_categorias[i][0]
             pegada_valor = top_categorias[i][1]
@@ -273,75 +272,137 @@ def exibir_dicas_personalizadas(pegadas_por_categoria):
                 "estilo_vida": "ESTILO DE VIDA"
             }.get(categoria_nome_tecnico, categoria_nome_tecnico.replace('_', ' ').upper())
 
-            print(f"\n--- 🥉 Sua Pegada em {nome_amigavel} ({pegada_valor:.2f} kgCO2e) ---")
+            st.markdown(f"--- 🥉 **Sua Pegada em {nome_amigavel} ({pegada_valor:.2f} kgCO2e)** ---")
 
             dicas = DICAS_REDUCAO.get(categoria_nome_tecnico, ["Hmm, para essa categoria, a dica é... não faça mais isso!"])
 
             if len(dicas) > 0:
                 dica1 = random.choice(dicas)
-                print(f"Dica 1: {dica1}")
+                st.write(f"Dica 1: {dica1}")
                 if len(dicas) > 1:
                     dicas_restantes = [d for d in dicas if d != dica1]
                     if dicas_restantes:
-                        print(f"Dica 2: {random.choice(dicas_restantes)}")
+                        st.write(f"Dica 2: {random.choice(dicas_restantes)}")
             else:
-                print("Parece que até eu estou sem sarcasmo para te dar dicas aqui. Tente de novo, ou não. Pelo menos finja que se importa.")
+                st.write("Parece que até eu estou sem sarcasmo para te dar dicas aqui. Tente de novo, ou não. Pelo menos finja que se importa.")
 
 
-def main():
-    print("Bem-vindo(a) ao EcoSimulador: Minha Pegada Verde! 🌍🌱")
-    print("Vamos calcular sua pegada de carbono pessoal. Responda algumas perguntas:")
+# --- LÓGICA PRINCIPAL DO APLICATIVO STREAMLIT ---
+st.set_page_config(
+    page_title="EcoSimulador: Sua Pegada Verde em Jogo!",
+    page_icon="🌍",
+    layout="centered"
+)
 
-    pegada_energia = 0.0
-    pegada_transporte = 0.0
-    pegada_alimentacao = 0.0
-    pegada_habitacao = 0.0
-    pegada_consumo = 0.0
-    pegada_residuos = 0.0
-    pegada_estilo_vida = 0.0
-    creditos_sustentaveis = 0.0
+st.title("🎮 EcoSimulador: Sua Pegada Verde em Jogo! 🌍🌱")
+st.markdown("Bem-vindo(a)! Vamos calcular sua pegada de carbono pessoal e descobrir como 'upar de nível' na sustentabilidade. 😉")
 
-    # --- 1. Perguntas sobre Energia e Combustível (Casa) ---
-    print("\n--- Energia e Combustível (Casa) ---")
-    consumo_energia_kwh = obter_input_numerico("Quantos kWh de energia elétrica você consumiu no último mês? (ex: 150):", float)
-    num_botijoes_gas_13kg = obter_input_numerico("Quantos botijões de gás de cozinha (13kg) você usou no último mês? (ex: 0.5 para meio botijão):", float)
+st.subheader("Informe seus hábitos (valores mensais ou conforme solicitado):")
 
+# --- 1. Perguntas sobre Energia e Combustível (Casa) ---
+st.header("⚡ Energia e Combustível (Casa)")
+consumo_energia_kwh = st.number_input("Consumo de energia elétrica (kWh/mês):", min_value=0.0, value=150.0, help="Média do seu consumo mensal de eletricidade.")
+num_botijoes_gas_13kg = st.number_input("Quantos botijões de gás de cozinha (13kg) você usou no último mês? (ex: 0.5 para meio botijão):", min_value=0.0, value=0.5, help="Quantidade de botijões de gás de 13kg.")
+
+
+# --- 2. Perguntas sobre Transporte ---
+st.header("🚗 Transporte")
+
+# Carro/Moto a Combustível
+usa_carro_moto_combustivel = st.checkbox("Você usa carro ou moto a gasolina/etanol/diesel?")
+distancia_carro_moto_combustivel = 0.0
+tipo_combustivel = "Nenhum"
+if usa_carro_moto_combustivel:
+    distancia_carro_moto_combustivel = st.number_input("Quantos km você percorreu com VEÍCULO A COMBUSTÍVEL no último mês?:", min_value=0.0, value=200.0)
+    tipo_combustivel = st.radio("Qual o PRINCIPAL COMBUSTÍVEL do seu veículo?", ["gasolina", "etanol", "diesel"], index=0)
+
+# Carro/Moto Elétrico
+usa_veiculo_eletrico = st.checkbox("Você usa carro ou moto ELÉTRICA?")
+distancia_veiculo_eletrico = 0.0
+tipo_veiculo_eletrico = "Nenhum"
+if usa_veiculo_eletrico:
+    tipo_veiculo_eletrico = st.radio("Qual tipo de veículo elétrico?", ["carro_eletrico", "moto_eletrica"], index=0)
+    distancia_veiculo_eletrico = st.number_input(f"Quantos km você percorreu de {tipo_veiculo_eletrico.replace('_', ' ').upper()} no último mês?:", min_value=0.0, value=0.0)
+
+# Transporte Coletivo e Avião
+st.markdown("Km percorridos em transporte coletivo e avião:")
+km_onibus = st.number_input("ÔNIBUS (km/mês):", min_value=0.0, value=50.0)
+km_metro = st.number_input("METRÔ (km/mês):", min_value=0.0, value=50.0)
+km_aviao_domestico = st.number_input("Viagens DOMÉSTICAS de avião (km/mês estimado):", min_value=0.0, value=0.0)
+km_aviao_internacional = st.number_input("Viagens INTERNACIONAIS de avião (km/mês estimado):", min_value=0.0, value=0.0)
+
+
+# --- 3. Perguntas sobre Alimentação ---
+st.header("🍔 Alimentação")
+st.markdown("Consumo estimado por mês (kg):")
+kg_carne_bovina = st.number_input("Carne Bovina (kg/mês):", min_value=0.0, value=2.5)
+kg_carne_suina = st.number_input("Carne Suína (kg/mês):", min_value=0.0, value=1.0)
+kg_frango = st.number_input("Frango (kg/mês):", min_value=0.0, value=3.0)
+kg_peixe = st.number_input("Peixe (kg/mês):", min_value=0.0, value=0.5)
+litros_leite = st.number_input("Leite (litros/mês):", min_value=0.0, value=5.0)
+kg_queijo = st.number_input("Queijo (kg/mês):", min_value=0.0, value=0.8)
+duzias_ovo = st.number_input("Ovo (dúzias/mês):", min_value=0, value=2, step=1)
+kg_arroz = st.number_input("Arroz (kg/mês):", min_value=0.0, value=5.0)
+kg_feijao = st.number_input("Feijão (kg/mês):", min_value=0.0, value=2.0)
+kg_vegetais = st.number_input("Vegetais/Frutas (kg/mês):", min_value=0.0, value=10.0)
+
+
+# --- 4. Perguntas sobre Habitação ---
+st.header("🏠 Habitação")
+num_comodos = st.number_input("Quantos cômodos (quartos, sala, cozinha, etc.) sua residência possui? (ex: 5):", min_value=1, value=5, step=1)
+horas_ar_condicionado_dia = st.number_input("Horas de ar-condicionado por dia (média):", min_value=0.0, value=2.0)
+horas_aquecedor_dia = st.number_input("Horas de aquecedor por dia (média):", min_value=0.0, value=0.0)
+# Convertendo para mensal aqui, antes de passar para a função
+horas_ar_condicionado_mensal = horas_ar_condicionado_dia * 30
+horas_aquecedor_mensal = horas_aquecedor_dia * 30
+
+
+# --- 5. Perguntas sobre Consumo de Produtos ---
+st.header("🛍️ Consumo de Produtos")
+st.markdown("Média de produtos novos adquiridos por mês (0 para nenhum, 0.1 para 1 a cada 10 meses):")
+num_celulares = st.number_input("Celulares:", min_value=0.0, value=0.0)
+num_laptops = st.number_input("Laptops:", min_value=0.0, value=0.0)
+num_geladeiras = st.number_input("Geladeiras:", min_value=0.0, value=0.0)
+num_televisoes = st.number_input("Televisões:", min_value=0.0, value=0.0)
+num_veiculos_eletricos_consumo = st.number_input("Veículos elétricos:", min_value=0.0, value=0.0) # Renomeado para não conflitar com transporte
+num_roupas_peca = st.number_input("Peças de Roupa:", min_value=0.0, value=5.0)
+
+
+# --- 6. Perguntas sobre Resíduos ---
+st.header("🗑️ Resíduos")
+num_sacos_lixo_100l = st.number_input("Sacos de lixo de 100L descartados (unid./mês):", min_value=0.0, value=2.5, help="Ex: 2.5 para 2 sacos e meio")
+kg_lixo_reciclavel = st.number_input("Lixo reciclável separado (kg/mês):", min_value=0.0, value=5.0)
+kg_eletronico = st.number_input("Lixo eletrônico descartado (kg/mês):", min_value=0.0, value=0.2)
+kg_compostagem = st.number_input("Material enviado para compostagem (kg/mês):", min_value=0.0, value=3.0)
+
+
+# --- 7. Perguntas sobre Estilo de Vida ---
+st.header("🧘‍♀️ Estilo de Vida")
+num_voos_eventos_ano = st.number_input("Voos (ou grandes eventos) que exigiram viagem no ÚLTIMO ANO:", min_value=0, value=0, step=1)
+horas_streaming_dia = st.number_input("Horas de streaming de vídeo por dia (média):", min_value=0.0, value=2.0)
+num_compras_online_mes = st.number_input("Compras online (número de pedidos/mês):", min_value=0, value=4, step=1)
+horas_streaming_mensal = horas_streaming_dia * 30 # Convertendo para mensal aqui
+
+
+# --- 8. Perguntas sobre Ações Sustentáveis (Créditos) ---
+st.header("🌳 Ações Sustentáveis (Redução da Pegada)")
+num_arvores_plantadas_mensal = st.number_input("Árvores plantadas ou contribuiu para plantar no último mês:", min_value=0.0, value=0.0)
+kg_creditos_carbono = st.number_input("Créditos de carbono adquiridos (kg/mês):", min_value=0.0, value=0.0)
+
+
+# --- BOTÃO DE CÁLCULO ---
+st.markdown("---")
+if st.button("Calcular Minha Pegada Verde!"):
+    # --- REALIZA OS CÁLCULOS QUANDO O BOTÃO É CLICADO ---
     pegada_energia = calcular_pegada_energia(consumo_energia_kwh, num_botijoes_gas_13kg)
-    print(f"Sua pegada de energia e combustível é de {pegada_energia:.2f} kgCO2e.")
 
-    # --- 2. Perguntas sobre Transporte ---
-    print("\n--- Transporte ---")
     total_transporte_combustivel = 0
-    total_transporte_eletrico = 0
-    total_transporte_coletivo = 0
-
-    # Carro/Moto a Combustível
-    usa_carro_moto_combustivel = input("Você usa carro ou moto a gasolina/etanol/diesel? (sim/nao): ").lower()
-    if usa_carro_moto_combustivel == "sim":
-        distancia_carro_moto_combustivel = obter_input_numerico("Quantos km você percorreu com VEÍCULO A COMBUSTÍVEL no último mês?:", float)
-        tipo_combustivel = ""
-        while tipo_combustivel not in ["gasolina", "etanol", "diesel"]:
-            tipo_combustivel = input("Qual o PRINCIPAL COMBUSTÍVEL do seu veículo? (gasolina/etanol/diesel): ").lower()
-            if tipo_combustivel not in ["gasolina", "etanol", "diesel"]:
-                print("Opção inválida. Por favor, escolha entre 'gasolina', 'etanol' ou 'diesel'.")
+    if usa_carro_moto_combustivel:
         total_transporte_combustivel = calcular_pegada_transporte_individual_combustivel(distancia_carro_moto_combustivel, tipo_combustivel)
 
-    # Carro/Moto Elétrico
-    usa_veiculo_eletrico = input("Você usa carro ou moto ELÉTRICA? (sim/nao): ").lower()
-    if usa_veiculo_eletrico == "sim":
-        tipo_veiculo_eletrico = ""
-        while tipo_veiculo_eletrico not in ["carro_eletrico", "moto"]:
-            tipo_veiculo_eletrico = input("Qual tipo de veículo elétrico? (carro_eletrico/moto): ").lower()
-            if tipo_veiculo_eletrico not in ["carro_eletrico", "moto"]:
-                print("Opção inválida. Por favor, escolha entre 'carro_eletrico' ou 'moto'.")
-        distancia_veiculo_eletrico = obter_input_numerico(f"Quantos km você percorreu de {tipo_veiculo_eletrico.replace('_', ' ').upper()} no último mês? (0 se não usou):", float)
-        total_transporte_eletrico += calcular_pegada_transporte_eletrico(distancia_veiculo_eletrico, tipo_veiculo_eletrico)
-
-    # Transporte Coletivo e Avião
-    km_onibus = obter_input_numerico("Quantos km você percorreu de ÔNIBUS no último mês? (0 se não usou):", float)
-    km_metro = obter_input_numerico("Quantos km você percorreu de METRÔ no último mês? (0 se não usou):", float)
-    km_aviao_domestico = obter_input_numerico("Quantos km você voou em viagens DOMÉSTICAS no último mês? (0 se não voou):", float)
-    km_aviao_internacional = obter_input_numerico("Quantos km você voou em viagens INTERNACIONAIS no último mês? (0 se não voou):", float)
+    total_transporte_eletrico = 0
+    if usa_veiculo_eletrico:
+        total_transporte_eletrico = calcular_pegada_transporte_eletrico(distancia_veiculo_eletrico, tipo_veiculo_eletrico)
 
     total_transporte_coletivo = (
         calcular_pegada_transporte_coletivo(km_onibus, "onibus") +
@@ -349,81 +410,26 @@ def main():
         calcular_pegada_transporte_coletivo(km_aviao_domestico, "aviao_domestico") +
         calcular_pegada_transporte_coletivo(km_aviao_internacional, "aviao_internacional")
     )
-
     pegada_transporte = total_transporte_combustivel + total_transporte_eletrico + total_transporte_coletivo
-    print(f"Sua pegada de transporte é de {pegada_transporte:.2f} kgCO2e.")
-
-    # --- 3. Perguntas sobre Alimentação ---
-    print("\n--- Alimentação ---")
-    kg_carne_bovina = obter_input_numerico("Quantos kg de CARNE BOVINA você consumiu no último mês? (ex: 2.5):", float)
-    kg_carne_suina = obter_input_numerico("Quantos kg de CARNE SUÍNA você consumiu no último mês? (ex: 1.0):", float)
-    kg_frango = obter_input_numerico("Quantos kg de FRANGO você consumiu no último mês? (ex: 3.0):", float)
-    kg_peixe = obter_input_numerico("Quantos kg de PEIXE você consumiu no último mês? (ex: 0.5):", float)
-    litros_leite = obter_input_numerico("Quantos LITROS de LEITE você consumiu no último mês? (ex: 5.0):", float)
-    kg_queijo = obter_input_numerico("Quantos kg de QUEIJO você consumiu no último mês? (ex: 0.8):", float)
-    duzias_ovo = obter_input_numerico("Quantas DÚZIAS de OVO você consumiu no último mês? (ex: 2):", int)
-    kg_arroz = obter_input_numerico("Quantos kg de ARROZ você consumiu no último mês? (ex: 5.0):", float)
-    kg_feijao = obter_input_numerico("Quantos kg de FEIJÃO você consumiu no último mês? (ex: 2.0):", float)
-    kg_vegetais = obter_input_numerico("Quantos kg de VEGETAIS/FRUTAS você consumiu no último mês? (ex: 10.0):", float)
 
     pegada_alimentacao = calcular_pegada_alimentacao(
         kg_carne_bovina, kg_carne_suina, kg_frango, kg_peixe,
         litros_leite, kg_queijo, duzias_ovo, kg_arroz, kg_feijao, kg_vegetais
     )
-    print(f"Sua pegada de alimentação é de {pegada_alimentacao:.2f} kgCO2e.")
-
-    # --- 4. Perguntas sobre Habitação ---
-    print("\n--- Habitação ---")
-    num_comodos = obter_input_numerico("Quantos cômodos (quartos, sala, cozinha, banheiro, etc.) sua residência possui? (ex: 5):", int)
-    horas_ar_condicionado_mensal = obter_input_numerico("Quantas HORAS por dia, em média, você usa AR CONDICIONADO? (ex: 4):", float) * 30
-    horas_aquecedor_mensal = obter_input_numerico("Quantas HORAS por dia, em média, você usa AQUECEDOR? (ex: 0):", float) * 30
 
     pegada_habitacao = calcular_pegada_habitacao(num_comodos, horas_ar_condicionado_mensal, horas_aquecedor_mensal)
-    print(f"Sua pegada de habitação é de {pegada_habitacao:.2f} kgCO2e.")
-
-    # --- 5. Perguntas sobre Consumo de Produtos ---
-    print("\n--- Consumo de Produtos ---")
-    num_celulares = obter_input_numerico("Quantos CELULARES novos você comprou no último mês? (ex: 0):", int)
-    num_laptops = obter_input_numerico("Quantos LAPTOPS novos você comprou no último mês? (ex: 0):", int)
-    num_geladeiras = obter_input_numerico("Quantas GELADEIRAS novas você comprou no último mês? (ex: 0):", int)
-    num_televisoes = obter_input_numerico("Quantas TELEVISÕES novas você comprou no último mês? (ex: 0):", int)
-    num_veiculos_eletricos = obter_input_numerico("Quantos VEÍCULOS ELÉTRICOS novos você comprou no último mês? (ex: 0):", int)
-    num_roupas_peca = obter_input_numerico("Quantas PEÇAS DE ROUPA novas você comprou no último mês? (ex: 5):", int)
 
     pegada_consumo = calcular_pegada_consumo(
         num_celulares, num_laptops, num_geladeiras,
-        num_televisoes, num_veiculos_eletricos, num_roupas_peca
+        num_televisoes, num_veiculos_eletricos_consumo, num_roupas_peca # Use a variável renomeada aqui
     )
-    print(f"Sua pegada de consumo é de {pegada_consumo:.2f} kgCO2e.")
-
-    # --- 6. Perguntas sobre Resíduos ---
-    print("\n--- Resíduos ---")
-    num_sacos_lixo_100l = obter_input_numerico("Quantos SACOS DE LIXO DE 100L (aqueles grandes) você descartou no último mês? (ex: 2.5 para 2 sacos e meio):", float)
-    kg_lixo_reciclavel = obter_input_numerico("Quantos kg de LIXO RECICLÁVEL você separou no último mês? (ex: 5.0):", float)
-    kg_eletronico = obter_input_numerico("Quantos kg de LIXO ELETRÔNICO você descartou no último mês? (ex: 0.2):", float)
-    kg_compostagem = obter_input_numerico("Quantos kg de material você enviou para COMPOSTAGEM no último mês? (ex: 3.0):", float)
 
     pegada_residuos = calcular_pegada_residuos(num_sacos_lixo_100l, kg_lixo_reciclavel, kg_eletronico, kg_compostagem)
-    print(f"Sua pegada de resíduos é de {pegada_residuos:.2f} kgCO2e.")
-
-    # --- 7. Perguntas sobre Estilo de Vida ---
-    print("\n--- Estilo de Vida ---")
-    num_voos_eventos_ano = obter_input_numerico("Quantos VOOS (ou grandes eventos) você participou no ÚLTIMO ANO? (ex: 1):", int)
-    horas_streaming_mensal = obter_input_numerico("Quantas HORAS de STREAMING (Netflix, YouTube) você assiste por dia, em média? (ex: 2.0):", float) * 30
-    num_compras_online_mes = obter_input_numerico("Quantas COMPRAS ONLINE você fez no último mês? (ex: 4):", int)
 
     pegada_estilo_vida = calcular_pegada_estilo_vida(num_voos_eventos_ano, horas_streaming_mensal, num_compras_online_mes)
-    print(f"Sua pegada de estilo de vida é de {pegada_estilo_vida:.2f} kgCO2e.")
 
-    # --- 8. Perguntas sobre Ações Sustentáveis (Créditos) ---
-    print("\n--- Ações Sustentáveis (Créditos de Carbono) ---")
-    num_arvores_plantadas = obter_input_numerico("Quantas ÁRVORES você plantou ou contribuiu para plantar no último mês? (ex: 0):", int)
-    kg_creditos_carbono = obter_input_numerico("Quantos kg de CRÉDITOS DE CARBONO você adquiriu no último mês? (ex: 0):", float)
+    creditos_sustentaveis = calcular_creditos_sustentaveis(num_arvores_plantadas_mensal, kg_creditos_carbono)
 
-    creditos_sustentaveis = calcular_creditos_sustentaveis(num_arvores_plantadas, kg_creditos_carbono)
-    print(f"Seus créditos sustentáveis são de {creditos_sustentaveis:.2f} kgCO2e.")
-
-    # Cálculo da Pegada de Carbono Total Mensal
     pegada_total_kgco2e = (
         pegada_energia +
         pegada_transporte +
@@ -448,6 +454,3 @@ def main():
     }
 
     exibir_dicas_personalizadas(pegadas_por_categoria)
-
-if __name__ == "__main__":
-    main()
