@@ -62,6 +62,7 @@ FATORES_EMISSAO = {
     },
     # ... outras categorias
 }
+```
 
 Observação: Valores negativos como os de "arvores_plantadas" ou "compostagem_kg" indicam uma redução (benefício) na pegada de carbono.
 
