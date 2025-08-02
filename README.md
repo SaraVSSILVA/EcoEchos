@@ -1,6 +1,6 @@
-# 🌍🌱 EcoSimulador: Minha Pegada Verde! 🌱🌍
+# 🌍🌱 EcoEchos: O Eco das Suas Escolhas! 🌱🌍
 
-Bem-vindo(a) ao EcoSimulador, uma ferramenta simples e divertida para calcular sua pegada de carbono pessoal e descobrir como você pode reduzi-la! Este simulador te ajuda a entender o impacto das suas atividades diárias no meio ambiente, oferecendo feedback e dicas personalizadas.
+Bem-vindo(a) ao EcoEchos, uma ferramenta simples e divertida para calcular sua pegada de carbono pessoal e descobrir como você pode reduzi-la! Este simulador te ajuda a entender o impacto das suas atividades diárias no meio ambiente, oferecendo feedback e dicas personalizadas.
 
 ## 🌟 O que é a Pegada de Carbono?
 
