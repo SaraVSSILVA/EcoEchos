@@ -1,5 +1,7 @@
 import streamlit as st
 import random
+import pandas as pd
+import plotly.express as px
 
 # --- FATORES DE EMISSÃO ---
 FATORES_EMISSAO = {
@@ -60,7 +62,7 @@ FATORES_EMISSAO = {
     }
 }
 
-# --- DICAS DE REDUÇÃO (MANTIDAS EXATAMENTE COMO NO SEU CÓDIGO) ---
+# --- DICAS DE REDUÇÃO ---
 DICAS_REDUCAO = {
     "energia_combustivel": [
         "Desligue as luzes, meliante! Não estamos iluminando um estádio. Ou você gosta de pagar caro e poluir?",
@@ -113,7 +115,7 @@ DICAS_REDUCAO = {
     ]
 }
 
-# --- FUNÇÕES DE CÁLCULO (MANTIDAS EXATAMENTE COMO NO SEU CÓDIGO) ---
+# --- FUNÇÕES DE CÁLCULO ---
 def calcular_pegada_energia(consumo_kwh, num_botijoes_gas_13kg):
     pegada = 0
     pegada += consumo_kwh * FATORES_EMISSAO["energia_combustivel"]["eletricidade_kWh"]
@@ -137,8 +139,8 @@ def calcular_pegada_transporte_individual_combustivel(distancia_km, tipo_combust
 def calcular_pegada_transporte_eletrico(distancia_km, tipo_veiculo):
     if tipo_veiculo == "carro_eletrico":
         return distancia_km * FATORES_EMISSAO["transporte"]["carro_eletrico_km"]
-    elif tipo_veiculo == "moto_eletrica": # Alterado de "moto" para "moto_eletrica" para clareza
-        return distancia_km * FATORES_EMISSAO["transporte"]["moto_km"] # Usa o fator de moto normal, mas agora é para elétrica
+    elif tipo_veiculo == "moto_eletrica": 
+        return distancia_km * FATORES_EMISSAO["transporte"]["moto_km"] 
     else:
         return 0
 
@@ -174,10 +176,6 @@ def calcular_pegada_alimentacao(
 def calcular_pegada_habitacao(num_comodos, horas_ar_condicionado_mensal, horas_aquecedor_mensal):
     total = 0
     total += num_comodos * FATORES_EMISSAO["habitacao"]["residencia_comodo"]
-    # Converter horas/mês para horas/dia para o fator do dicionário (se o fator for por hora/dia)
-    # Pelo seu main.py, horas_ar_condicionado_mensal e horas_aquecedor_mensal JÁ ESTÃO MULTIPLICADAS POR 30
-    # Então, se o fator de emissão no dicionário for por HORA (e não por hora/dia), a conta já está certa.
-    # Vou considerar que o fator no dicionário é por HORA e as entradas são total de horas no mês.
     total += horas_ar_condicionado_mensal * FATORES_EMISSAO["habitacao"]["ar_condicionado_hora"]
     total += horas_aquecedor_mensal * FATORES_EMISSAO["habitacao"]["aquecedor_hora"]
     return total
@@ -209,18 +207,18 @@ def calcular_pegada_residuos(num_sacos_lixo_100l, kg_lixo_reciclavel, kg_eletron
 
 def calcular_pegada_estilo_vida(num_voos_eventos_ano, horas_streaming_mensal, num_compras_online_mes):
     total = 0
-    total += (num_voos_eventos_ano / 12) * FATORES_EMISSAO["estilo_vida"]["voos_eventos_ano"] # Convertendo anual para mensal
+    total += (num_voos_eventos_ano / 12) * FATORES_EMISSAO["estilo_vida"]["voos_eventos_ano"] 
     total += horas_streaming_mensal * FATORES_EMISSAO["estilo_vida"]["streaming_hora"]
     total += num_compras_online_mes * FATORES_EMISSAO["estilo_vida"]["compras_online_mes"]
     return total
 
-def calcular_creditos_sustentaveis(num_arvores_plantadas_mensal, kg_creditos_carbono): # Ajustei o nome do parâmetro
+def calcular_creditos_sustentaveis(num_arvores_plantadas_mensal, kg_creditos_carbono): 
     total = 0
     total += num_arvores_plantadas_mensal * FATORES_EMISSAO["sustentavel"]["arvores_plantadas"]
     total += kg_creditos_carbono * FATORES_EMISSAO["sustentavel"]["creditos_carbono_kg"]
     return total
 
-# --- FUNÇÕES DE FEEDBACK E DICAS ADAPTADAS PARA STREAMLIT ---
+# --- FUNÇÕES DE FEEDBACK ---
 def exibir_resumo_e_feedback_total(pegada_total_kgco2e):
     st.markdown("---")
     st.header(f"SUA PEGADA DE CARBONO TOTAL MENSAL É: {pegada_total_kgco2e:.2f} kgCO2e")
@@ -233,21 +231,22 @@ def exibir_resumo_e_feedback_total(pegada_total_kgco2e):
     elif 150 < pegada_total_kgco2e <= 400:
         st.info("👍 Bom, pelo menos você tenta, né?. Nem um pé-grande, nem uma fada. Parece que você está tentando, mas ainda dá para apertar um pouco mais essa bota. O planeta está de olho em você!")
     elif 400 < pegada_total_kgco2e <= 800:
-        st.warning("🧐 Olha só, achamos o Pé-Médio! Sua pegada já está deixando uma marca considerável. Talvez seja hora de trocar o carro por uma bicicleta... ou por um par de pernas. O aquecimento global manda lembranças!")
+        st.warning("🧐 Olha só, achamos o Pé-Grande! Sua pegada já está deixando uma marca considerável. Talvez seja hora de trocar o carro por uma bicicleta... ou por um par de pernas. O aquecimento global manda lembranças!")
     elif 800 < pegada_total_kgco2e <= 1500:
-        st.error("🚨 Cuidado para não esmagar o planeta! Sua pegada está ficando GIGANTE. Será que você está andando de dinossauro ou algo assim? O IBAMA já está a caminho, só pra avisar.")
+        st.error("🚨  Alerta ambiental! Sua pegada tá tão colossal que o planeta pediu arrego. Será que você está pilotando um mamute ou só esquecendo de pensar antes de consumir? Se continuar assim, o Greenpeace vai te adicionar no grupo VIP deles.")
     else:
         st.error("🔥 PARABÉNS! Você deve ser um dos maiores contribuidores para o APOCALIPSE climático! Tem nem o que falar, vai plantar uma árvore, ou melhor, um bosque inteiro! O planeta está chorando... e você é o motivo.")
 
     st.markdown("_Lembre-se: cada quilo de CO2e conta. Ou não. Depende do quanto você se importa com o futuro... e com a ironia do destino._")
-    st.markdown("_Obrigada por usar o EcoSimulador. Agora vá e faça algo útil pelo planeta... ou não. A escolha é sua, meliante ambiental._")
+    st.markdown("_Obrigada por usar o EcoEchos. Agora vá e faça algo útil pelo planeta... ou não. A escolha é sua, meliante ambiental._")
 
 
 def exibir_dicas_personalizadas(pegadas_por_categoria):
     st.subheader("\n--- O Oráculo do Carbono Revela: Onde Você Está Falhando Mais (e como remediar, talvez) ---")
 
+    LIMIAR_PARA_DICAS = 50  # Limite para considerar uma categoria como "significativa"
     categorias_com_impacto = {
-        cat: val for cat, val in pegadas_por_categoria.items() if val > 5
+        cat: val for cat, val in pegadas_por_categoria.items() if val > LIMIAR_PARA_DICAS
     }
 
     if not categorias_com_impacto:
@@ -255,7 +254,7 @@ def exibir_dicas_personalizadas(pegadas_por_categoria):
     else:
         top_categorias = sorted(categorias_com_impacto.items(), key=lambda item: item[1], reverse=True)
 
-        num_dicas = min(len(top_categorias), 3) # Exibir até 3 categorias de maior impacto
+        num_dicas = min(len(top_categorias), 2) # Exibir até 2 categorias de maior impacto
 
         st.write("Pelas minhas contas (e minha paciência), suas maiores fontes de 'poluição gloriosa' são:")
         for i in range(num_dicas):
@@ -289,12 +288,12 @@ def exibir_dicas_personalizadas(pegadas_por_categoria):
 
 # --- LÓGICA PRINCIPAL DO APLICATIVO STREAMLIT ---
 st.set_page_config(
-    page_title="EcoSimulador: Sua Pegada Verde em Jogo!",
+    page_title="EcoEchos: Sua Pegada Verde em Jogo!",
     page_icon="🌍",
     layout="centered"
-)
+)       
 
-st.title("🎮 EcoSimulador: Sua Pegada Verde em Jogo! 🌍🌱")
+st.title("🎮 EcoEchos: O Eco das Suas Escolhas! 🌍🌱")
 st.markdown("Bem-vindo(a)! Vamos calcular sua pegada de carbono pessoal e descobrir como 'upar de nível' na sustentabilidade. 😉")
 
 st.subheader("Informe seus hábitos (valores mensais ou conforme solicitado):")
@@ -453,4 +452,28 @@ if st.button("Calcular Minha Pegada Verde!"):
         "estilo_vida": pegada_estilo_vida
     }
 
+    st.subheader("📊 Visualização da Pegada de Carbono")
+
+    df_pegada = pd.DataFrame(pegadas_por_categoria.items(), columns=["Categoria", "Pegada (kgCO2e)"])
+    df_pegada["Categoria"] = df_pegada["Categoria"].map({
+        "energia_combustivel": "Energia e Combustível",
+        "transporte": "Transporte",
+        "alimentacao": "Alimentação",
+        "habitacao": "Habitação",
+        "consumo": "Consumo de Produtos",
+        "residuos": "Resíduos",
+        "estilo_vida": "Estilo de Vida"
+    })
+
+    fig = px.bar(df_pegada,
+                 x="Categoria",
+                 y="Pegada (kgCO2e)",
+                 title="Contribuição de Cada Categoria para sua Pegada de Carbono",
+                 labels={"Pegada (kgCO2e)": "Pegada de Carbono (kgCO2e)"},
+                 color="Pegada (kgCO2e)",
+                 color_continuous_scale=px.colors.sequential.Greens_r)
+    st.plotly_chart(fig, use_container_width=True)
+
     exibir_dicas_personalizadas(pegadas_por_categoria)
+
+
