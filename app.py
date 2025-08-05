@@ -5,13 +5,13 @@ import json
 import random
 from config.fatores_emissao import FATORES_EMISSAO
 from config.dicas import DICAS_REDUCAO
-from services.db_service import init_db, register_user, login_user, save_user_monthly_data, load_user_monthly_data
+from services.db_service import init_db, register_user, login_user, save_user_daily_data, load_user_monthly_data, load_user_daily_data
 from util.calculos_util import (
     calcular_pegada_energia, calcular_pegada_transporte_individual_combustivel,
     calcular_pegada_transporte_eletrico, calcular_pegada_transporte_coletivo,
     calcular_pegada_alimentacao, calcular_pegada_habitacao,
-    calcular_pegada_consumo, calcular_pegada_residuos,
-    calcular_pegada_estilo_vida, calcular_creditos_sustentaveis
+    calcular_pegada_consumo, calcular_pegada_residuos,    calcular_pegada_estilo_vida, calcular_creditos_sustentaveis,
+    calcular_pegada_completa
 )
 from util.exibicao_util import exibir_resumo_e_feedback_total, exibir_dicas_personalizadas, exibir_grafico_pegada_por_categoria
 
@@ -126,46 +126,55 @@ else:
         "estilo_vida": 0.0
     })
 
-    # --- Selecionar o mês/ano para salvar/recarregar ---
-    month_options = []
-    for i in range(12):
-        month_options.append((datetime.now() - pd.DateOffset(months=i)).strftime('%Y-%m'))
-    month_options.reverse()
-
-    current_month_year = st.sidebar.selectbox(
-        "Selecione o Mês/Ano para Salvar/Carregar Dados Mensais:",
-        options=month_options,
-        index=len(month_options) - 1,
-        key="month_year_selector"
-    )
-
+    today = datetime.date.today()
+    selected_date = st.sidebar.date_input ("Selecione a data para registrar:", today)
+    
     with st.sidebar:
-        if st.button("💾 Salvar Meus Dados Mensais"):
+        if st.button("💾 Salvar Dados do Dia"):
             if st.session_state.user and 'id' in st.session_state.user:
-                save_user_monthly_data(
+                save_user_daily_data(
                     st.session_state.user['id'],
-                    current_month_year,
+                    str(selected_date),
                     st.session_state.get('last_calculated_pegada_total', 0.0),
                     st.session_state.inputs
                 )
             else:
                 st.error("Erro: Usuário não logado. Por favor, faça login novamente para salvar os dados.")
 
-        if st.button("⬆️ Carregar Meus Dados Mensais"):
+        if st.button("⬆️ Carregar Dados do Dia"):
             if st.session_state.user and 'id' in st.session_state.user:
-                dados_carregados = load_user_monthly_data(
+                dados_carregados = load_user_daily_data(
                     st.session_state.user['id'],
-                    current_month_year
+                    str(selected_date)
                 )
                 if dados_carregados:
                     st.session_state.inputs = dados_carregados['input_data']
                     st.session_state['last_calculated_pegada_total'] = dados_carregados['pegada_total']
+                    st.session_state['last_calculated_pegadas_por_categoria'] = calcular_pegada_completa(dados_carregados['input_data'])['pegadas_por_categoria']
                     # O gráfico só será atualizado após um novo clique em "Calcular",
                     st.rerun()
                 else:
-                    st.info(f"Nenhum dado encontrado para {current_month_year}.")
+                    st.info(f"Nenhum dado encontrado para {selected_date}.")
             else:
                 st.error("Erro: Usuário não logado. Por favor, faça login para carregar dados.")
+
+        st.markdown("---")
+        st.subheader("Visualizar Pegada Mensal")
+        selected_month_year = st.text_input("Mês (YYYY-MM)", value=today.strftime('%Y-%m'))
+        if st.button("Ver Pegada Mensal"):
+            if st.session_state.user and 'id' in st.session_state.user:
+                pegada_total_mensal = load_user_monthly_data(
+                    st.session_state.user['id'],
+                    selected_month_year
+                )
+                if pegada_total_mensal is not None and pegada_total_mensal > 0:
+                    st.session_state['last_calculated_pegada_total'] = pegada_total_mensal
+                    st.success(f"Pegada total do mês {selected_month_year}: {pegada_total_mensal:.2f} kgCO2e")
+                    st.rerun() # Para atualizar a tela
+                else:
+                    st.info(f"Nenhum dado encontrado para o mês {selected_month_year}.")
+            else:
+                st.error("Erro: Usuário não logado. Por favor, faça login.")
 
     # --- Coleta de Dados do Usuário ---
     st.subheader("🎮 Sua Jornada Ecológica: Preencha as Etapas!")
@@ -304,7 +313,6 @@ else:
     # --- BOTÃO DE CÁLCULO E EXIBIÇÃO DE RESULTADOS ---
     st.markdown("---")
     if st.button("Calcular Minha Pegada Verde!"):
-        
         pegada_energia = calcular_pegada_energia(
             st.session_state.inputs["consumo_energia_kwh"],
             st.session_state.inputs["num_botijoes_gas_13kg"]

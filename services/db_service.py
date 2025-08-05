@@ -39,11 +39,11 @@ def init_db():
         CREATE TABLE IF NOT EXISTS monthly_data (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
-            month_year TEXT NOT NULL,
+            data TEXT,
             pegada_total REAL,
             input_data TEXT,
             FOREIGN KEY (user_id) REFERENCES users (id),
-            UNIQUE(user_id, month_year)
+            UNIQUE(user_id, data)
         )
     ''')
     conn.commit()
@@ -82,7 +82,7 @@ def login_user(username, password):
         st.error("Usuário ou senha inválidos.")
         return None
 
-def save_user_monthly_data(user_id, month_year, pegada_total, input_data):
+def save_user_daily_data(user_id, date, pegada_total, input_data):
     """Salva ou atualiza os dados mensais de um usuário."""
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -90,25 +90,45 @@ def save_user_monthly_data(user_id, month_year, pegada_total, input_data):
     try:
         # Usa ON CONFLICT para atualizar o registro se ele já existir (INSERT or UPDATE)
         cursor.execute('''
-            INSERT INTO monthly_data (user_id, month_year, pegada_total, input_data)
+            INSERT INTO daily_data (user_id, date, pegada_total, input_data)
             VALUES (?, ?, ?, ?)
-            ON CONFLICT(user_id, month_year) DO UPDATE SET
+            ON CONFLICT(user_id, date) DO UPDATE SET
             pegada_total=excluded.pegada_total,
             input_data=excluded.input_data
-        ''', (user_id, month_year, pegada_total, input_data_json))
+        ''', (user_id, date, pegada_total, input_data_json))
         conn.commit()
-        st.success(f"Dados de {month_year} salvos com sucesso!")
+        st.success(f"Dados de {date} salvos com sucesso!")
     finally:
         conn.close()
 
-def load_user_monthly_data(user_id, month_year):
+def load_user_daily_data(user_id, date):
     """Carrega os dados mensais de um usuário a partir do banco de dados."""
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    cursor.execute("SELECT pegada_total, input_data FROM monthly_data WHERE user_id = ? AND month_year = ?", (user_id, month_year))
+    cursor.execute("SELECT pegada_total, input_data FROM daily_data WHERE user_id = ? AND date = ?", (user_id, date))
     data_record = cursor.fetchone()
     conn.close()
     if data_record:
         return {'pegada_total': data_record[0], 'input_data': json.loads(data_record[1])}
     return None
+
+def load_user_monthly_data(user_id, month_year):
+    """Carrega e soma os dados diários de um mês específico."""
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT pegada_total FROM daily_data WHERE user_id = ? AND date LIKE ?", (user_id, f"{month_year}%"))
+
+    pegadas_diarias = cursor.fetchall()
+    conn.close()
+
+    if pegadas_diarias:
+        pegada_total_mensal = sum(p[0] for p in pegadas_diarias)
+        return pegada_total_mensal
+    return 0.0
+
+
+    
+
+
+    
 
