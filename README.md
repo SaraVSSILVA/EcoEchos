@@ -1,86 +1,86 @@
-# 🌍🌱 EcoEchos: O Eco das Suas Escolhas! 🌱🌍
+# 🎮 EcoEchos: O Eco das Suas Escolhas\! 🌍🌱
 
-Bem-vindo(a) ao EcoEchos, uma ferramenta simples e divertida para calcular sua pegada de carbono pessoal e descobrir como você pode reduzi-la! Este simulador te ajuda a entender o impacto das suas atividades diárias no meio ambiente, oferecendo feedback e dicas personalizadas.
+Bem-vindo ao **EcoEchos**, o seu aplicativo interativo para calcular e entender sua pegada de carbono pessoal de forma divertida e envolvente\! Com o EcoEchos, você pode:
 
-## 🌟 O que é a Pegada de Carbono?
+  * **Calcular Sua Pegada:** Preencha seus hábitos de consumo em diversas categorias (energia, transporte, alimentação, habitação, consumo, resíduos, estilo de vida) e descubra o impacto ambiental de suas escolhas em kg de CO2 equivalente.
+  * **Identificar Áreas de Melhoria:** Veja quais categorias mais contribuem para sua pegada e receba dicas personalizadas para reduzi-la.
+  * **Acompanhar Seu Progresso:** Monitore suas emissões ao longo do tempo e celebre suas conquistas na jornada pela sustentabilidade.
+  * **Aprender e Agir:** Descubra novas formas de "upar de nível" na sustentabilidade, com ações que compensam ou reduzem sua pegada.
 
-A pegada de carbono é a quantidade total de gases de efeito estufa (como o CO2) que são gerados direta ou indiretamente pelas nossas atividades. Calcular a sua pegada é o primeiro passo para entender onde você pode fazer a diferença e contribuir para um planeta mais sustentável.
+## ✨ Novidades e Funcionalidades Principais
 
-## ✨ Funcionalidades
+  * **Sistema de Usuários (Login/Cadastro):** Agora você pode criar uma conta, fazer login e ter uma experiência personalizada. Seus dados e progresso são vinculados ao seu perfil.
+  * **Persistência de Dados Mensais:** Salve e carregue seus dados de pegada de carbono e hábitos por mês/ano. Nunca perca seu progresso e acompanhe sua evolução\!
+  * **Interface Intuitiva:** Um formulário dividido em abas torna o preenchimento dos dados fácil e organizado.
+  * **Resultados Detalhados:** Obtenha um resumo claro da sua pegada total e uma análise por categoria para identificar seus maiores impactos.
+  * **Dicas Personalizadas:** Receba sugestões práticas e específicas para reduzir sua pegada com base em seus hábitos.
+  * **Arquitetura Modular:** O código foi refatorado e dividido em arquivos menores (configurações, serviços de banco de dados, utilitários de cálculo e exibição) para facilitar a manutenção, desenvolvimento e escalabilidade.
 
-* **Cálculo Abrangente:** O EcoSimulador considera diversas categorias da sua vida diária:
-    * **Energia e Combustível:** Consumo de eletricidade e gás em casa.
-    * **Transporte:** Uso de carro (combustível e elétrico), moto, ônibus, metrô e avião.
-    * **Alimentação:** Consumo de diferentes tipos de carne, laticínios, ovos, grãos e vegetais.
-    * **Habitação:** Impacto da sua residência (número de cômodos, uso de ar condicionado/aquecedor).
-    * **Consumo de Produtos:** Emissões relacionadas à compra de eletrônicos e roupas.
-    * **Resíduos:** Descarte de lixo comum, reciclagem, eletrônicos e compostagem.
-    * **Estilo de Vida:** Impacto de voos, streaming e compras online.
-    * **Ações Sustentáveis:** Reduções na pegada por plantar árvores ou adquirir créditos de carbono.
-* **Feedback Personalizado:** Após o cálculo, você receberá uma análise divertida sobre o tamanho da sua pegada.
-* **Dicas de Redução:** O simulador identifica as categorias com maior impacto na sua pegada e oferece dicas práticas (e um tanto sarcásticas!) para você começar a fazer a diferença.
+## 🚀 Como Rodar o EcoEchos Localmente
 
-## 🚀 Como Usar
+Siga estes passos para configurar e executar o aplicativo em sua máquina:
 
-Para rodar o EcoSimulador, você precisará ter o Python instalado em seu computador.
+1.  **Pré-requisitos:**
 
-1.  **Salve o Código:**
-    Salve o código Python (o arquivo que contém todo o programa) em um arquivo com a extensão `.py` (por exemplo, `ecosimulador.py`).
+      * Python 3.9+
+      * `pip` (gerenciador de pacotes do Python)
 
-2.  **Abra o Terminal/Prompt de Comando:**
-    Navegue até o diretório onde você salvou o arquivo.
+2.  **Clone o Repositório:**
 
-3.  **Execute o Programa:**
-    Digite o seguinte comando e pressione Enter:
     ```bash
-    python ecosimulador.py
+    git clone https://github.com/seu-usuario/EcoEchos.git
+    cd EcoEchos
     ```
 
-4.  **Responda às Perguntas:**
-    O programa fará uma série de perguntas sobre seus hábitos de consumo e estilo de vida. Digite suas respostas e pressione Enter após cada uma. Certifique-se de digitar números válidos quando solicitado (inteiros ou decimais).
+    *(**Nota:** Altere `https://github.com/seu-usuario/EcoEchos.git` para o URL real do seu repositório.)*
 
-5.  **Veja o Resultado:**
-    Ao final, o EcoSimulador apresentará sua pegada de carbono total mensal e dará algumas dicas personalizadas para ajudar a reduzi-la.
+3.  **Crie e Ative um Ambiente Virtual (Recomendado):**
 
-## 📊 Fatores de Emissão
+    ```bash
+    python -m venv venv
+    # No Windows:
+    .\venv\Scripts\activate
+    # No macOS/Linux:
+    source venv/bin/activate
+    ```
 
-Os valores de emissão utilizados neste simulador são baseados em estimativas e podem variar dependendo da fonte, região e método de cálculo. Eles são uma referência para ajudar a visualizar o impacto das diferentes atividades.
+4.  **Instale as Dependências:**
 
-**Exemplo de alguns fatores utilizados (em kg de CO2 equivalente - kgCO2e):**
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-```python
-FATORES_EMISSAO = {
-    "energia_combustivel": {
-        "eletricidade_kWh": 0.065,
-        "gasolina_litro": 2.32,
-        # ... outros
-    },
-    "alimentacao": {
-        "carne_bovina_kg": 26.5,
-        "vegetais_kg": 0.85,
-        # ... outros
-    },
-    # ... outras categorias
-}
-```
+    *(**Importante:** Certifique-se de que o seu `requirements.txt` contém todas as bibliotecas necessárias, como `streamlit`, `pandas`, `plotly`, `SQLAlchemy` (ou `mysql-connector-python` se estiver usando MySQL diretamente, mas seu `db_service` indica SQLite, então talvez `SQLAlchemy` seja suficiente para abstrair o banco de dados).*
 
-Observação: Valores negativos como os de "arvores_plantadas" ou "compostagem_kg" indicam uma redução (benefício) na pegada de carbono.
+5.  **Execute o Aplicativo Streamlit:**
 
-## 💡 Dicas de Redução
-O simulador oferece dicas para as categorias que mais contribuem para sua pegada. As dicas são projetadas para serem informativas e, por vezes, bem-humoradas, incentivando a reflexão sobre seus hábitos.
+    ```bash
+    streamlit run app.py
+    ```
 
-## Próximos Passos (Backlog)
+    O aplicativo será aberto automaticamente no seu navegador padrão em `http://localhost:8501`.
 
-* [ ] Refatoração e testes iniciais.
-* [ ] (Futuro) Migração para uma interface web com Streamlit.
-* [ ] (Futuro) Adição de elementos de gamificação (níveis, conquistas).
+## 🛠️ Estrutura do Projeto
 
-## Contribuição
+  * `app.py`: O arquivo principal do Streamlit que orquestra a interface e as chamadas para os módulos.
+  * `configuracao/` (ou `config/`): Contém arquivos de configuração, como `fatores_emissao.py` e `dicas.py`.
+  * `servicos/` (ou `services/`): Contém `db_servico.py` (ou `db_service.py`), responsável pelas interações com o banco de dados (SQLite).
+  * `utilitarios/` (ou `util/`): Inclui módulos para:
+      * `calculos_util.py`: Funções para calcular a pegada de carbono por categoria.
+      * `exibicao_util.py`: Funções para exibir os resultados, gráficos e dicas.
+  * `README.md`: Este arquivo.
+  * `requirements.txt`: Lista de dependências do projeto.
+  * `database.db`: O arquivo do banco de dados SQLite (será criado automaticamente ao rodar o app pela primeira vez).
 
-Este projeto é um esforço pessoal de aprendizado e desenvolvimento. Sugestões e ideias são bem-vindas!
+## 🌐 Em Breve: EcoEchos Online!
+Estou trabalhando para que o EcoEchos possa ser acessado por todos, a qualquer momento e de qualquer lugar! Em breve, você poderá calcular sua pegada verde e explorar sua jornada de sustentabilidade diretamente em seu navegador, sem a necessidade de instalações ou configurações. Mantenha-se atento às atualizações!
 
-## Licença
+## 🤝 Contribuições
 
-Este projeto está licenciado sob a Licença MIT. 
+Contribuições são bem-vindas\! Se você tiver ideias para melhorias, novas categorias de cálculo, dicas de redução ou qualquer outra funcionalidade, sinta-se à vontade para abrir uma *issue* ou enviar um *pull request*.
 
----
+## 📄 Licença
+
+Este projeto está licenciado sob a licença [MIT].
+
+-----
