@@ -126,7 +126,7 @@ else:
         "estilo_vida": 0.0
     })
 
-    today = datetime.date.today()
+    today = datetime.today().date()
     selected_date = st.sidebar.date_input ("Selecione a data para registrar:", today)
     
     with st.sidebar:

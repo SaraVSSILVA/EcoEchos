@@ -1,86 +1,124 @@
-# 🎮 EcoEchos: O Eco das Suas Escolhas\! 🌍🌱
+# 🎮 EcoEchos: O Eco das Suas Escolhas! 🌍🌱
 
-Bem-vindo ao **EcoEchos**, o seu aplicativo interativo para calcular e entender sua pegada de carbono pessoal de forma divertida e envolvente\! Com o EcoEchos, você pode:
+Bem-vindo ao **EcoEchos**. Agora o projeto é centrado em uma API FastAPI (com autenticação JWT) e, opcionalmente, um cliente Streamlit local. Você pode:
 
-  * **Calcular Sua Pegada:** Preencha seus hábitos de consumo em diversas categorias (energia, transporte, alimentação, habitação, consumo, resíduos, estilo de vida) e descubra o impacto ambiental de suas escolhas em kg de CO2 equivalente.
-  * **Identificar Áreas de Melhoria:** Veja quais categorias mais contribuem para sua pegada e receba dicas personalizadas para reduzi-la.
-  * **Acompanhar Seu Progresso:** Monitore suas emissões ao longo do tempo e celebre suas conquistas na jornada pela sustentabilidade.
-  * **Aprender e Agir:** Descubra novas formas de "upar de nível" na sustentabilidade, com ações que compensam ou reduzem sua pegada.
+- Calcular sua pegada de carbono por categorias (energia, transporte, alimentação, habitação, consumo, resíduos, estilo de vida).
+- Salvar e carregar histórico diário e mensal por usuário.
+- Usar gamificação: ranking mensal e conquistas por usuário.
+- Integrar com frontend externo via REST (CORS configurável).
 
-## ✨ Novidades e Funcionalidades Principais
+## ✨ Principais funcionalidades
 
-  * **Sistema de Usuários (Login/Cadastro):** Agora você pode criar uma conta, fazer login e ter uma experiência personalizada. Seus dados e progresso são vinculados ao seu perfil.
-  * **Persistência de Dados Mensais:** Salve e carregue seus dados de pegada de carbono e hábitos por mês/ano. Nunca perca seu progresso e acompanhe sua evolução\!
-  * **Interface Intuitiva:** Um formulário dividido em abas torna o preenchimento dos dados fácil e organizado.
-  * **Resultados Detalhados:** Obtenha um resumo claro da sua pegada total e uma análise por categoria para identificar seus maiores impactos.
-  * **Dicas Personalizadas:** Receba sugestões práticas e específicas para reduzir sua pegada com base em seus hábitos.
-  * **Arquitetura Modular:** O código foi refatorado e dividido em arquivos menores (configurações, serviços de banco de dados, utilitários de cálculo e exibição) para facilitar a manutenção, desenvolvimento e escalabilidade.
+- Autenticação JWT (login/cadastro de usuários)
+- Endpoints em PT-BR para cálculo e histórico
+- Banco de dados pluggable: SQLite (local) ou MongoDB Atlas (produção)
+- Dicas de redução e fatores de emissão integrados
+- Health check de banco: `/health/db`
 
-## 🚀 Como Rodar o EcoEchos Localmente
+## 🚀 Executar localmente (API)
 
-Siga estes passos para configurar e executar o aplicativo em sua máquina:
+### Pré-requisitos
 
-1.  **Pré-requisitos:**
+- Python 3.10+ (recomendado 3.11)
+- pip
 
-      * Python 3.9+
-      * `pip` (gerenciador de pacotes do Python)
+### Instalação
 
-2.  **Clone o Repositório:**
+```bash
+python -m venv venv
+./venv/Scripts/activate   # Windows
+# source venv/bin/activate # macOS/Linux
+pip install -r requirements.txt
+```
 
-    ```bash
-    git clone https://github.com/seu-usuario/EcoEchos.git
-    cd EcoEchos
-    ```
+### Configuração (.env)
 
-    *(**Nota:** Altere `https://github.com/seu-usuario/EcoEchos.git` para o URL real do seu repositório.)*
+- Para SQLite (mais simples):
 
-3.  **Crie e Ative um Ambiente Virtual (Recomendado):**
+```env
+DB_BACKEND=SQLITE
+SECRET_KEY=dev_key
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+```
 
-    ```bash
-    python -m venv venv
-    # No Windows:
-    .\venv\Scripts\activate
-    # No macOS/Linux:
-    source venv/bin/activate
-    ```
+- Para MongoDB Atlas (recomendado para persistência real):
 
-4.  **Instale as Dependências:**
+```env
+DB_BACKEND=MONGO
+SECRET_KEY=dev_key
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+MONGODB_DBNAME=EcoEchosDB
+MONGODB_USER=seu_usuario
+MONGODB_PASSWORD=sua_senha
+MONGODB_HOST=cluster0.seucluster.mongodb.net
+MONGODB_APPNAME=EcoEchos
+MONGODB_AUTH_SOURCE=admin
+```
 
-    ```bash
-    pip install -r requirements.txt
-    ```
+Observação: usando variáveis separadas, a API codifica usuário/senha automaticamente.
 
-    *(**Importante:** Certifique-se de que o seu `requirements.txt` contém todas as bibliotecas necessárias, como `streamlit`, `pandas`, `plotly`, `SQLAlchemy` (ou `mysql-connector-python` se estiver usando MySQL diretamente, mas seu `db_service` indica SQLite, então talvez `SQLAlchemy` seja suficiente para abstrair o banco de dados).*
+### Rodar API
 
-5.  **Execute o Aplicativo Streamlit:**
+```bash
+uvicorn api:app --reload --host 127.0.0.1 --port 8001
+```
 
-    ```bash
-    streamlit run app.py
-    ```
+### Testar
 
-    O aplicativo será aberto automaticamente no seu navegador padrão em `http://localhost:8501`.
+- Docs (Swagger): <http://127.0.0.1:8001/docs>
+- Health DB: <http://127.0.0.1:8001/health/db>
 
-## 🛠️ Estrutura do Projeto
+### Fluxo de uso (Swagger)
 
-  * `app.py`: O arquivo principal do Streamlit que orquestra a interface e as chamadas para os módulos.
-  * `configuracao/` (ou `config/`): Contém arquivos de configuração, como `fatores_emissao.py` e `dicas.py`.
-  * `servicos/` (ou `services/`): Contém `db_servico.py` (ou `db_service.py`), responsável pelas interações com o banco de dados (SQLite).
-  * `utilitarios/` (ou `util/`): Inclui módulos para:
-      * `calculos_util.py`: Funções para calcular a pegada de carbono por categoria.
-      * `exibicao_util.py`: Funções para exibir os resultados, gráficos e dicas.
-  * `README.md`: Este arquivo.
-  * `requirements.txt`: Lista de dependências do projeto.
-  * `database.db`: O arquivo do banco de dados SQLite (será criado automaticamente ao rodar o app pela primeira vez).
+- POST /usuarios/registrar → cria usuário
+- POST /autenticacao/entrar → pega access_token
+- Authorize (Bearer token)
+- POST /pegada/calcular → calcula a partir do JSON de inputs
+- POST /historico/diario/salvar → salva um dia (não envie user_id; usa o do token)
+- POST /historico/diario/carregar → carrega o dia
+- POST /historico/mensal/carregar → soma do mês
+- GET /ranking → ranking mensal
+- GET /conquistas/{usuario_id} → conquistas do mês (use seu id do token ou GET /usuarios/eu)
 
-## 🌐 Em Breve: EcoEchos Online!
-Estou trabalhando para que o EcoEchos possa ser acessado por todos, a qualquer momento e de qualquer lugar! Em breve, você poderá calcular sua pegada verde e explorar sua jornada de sustentabilidade diretamente em seu navegador, sem a necessidade de instalações ou configurações. Mantenha-se atento às atualizações!
+## 🗄️ MongoDB Atlas (opcional)
+
+Checklist:
+
+- Database User com role readWrite no DB
+- Network Access com seu IP liberado (para teste, 0.0.0.0/0)
+- Conexão SRV do Atlas (host `.mongodb.net`)
+- Se der “bad auth”: resetar senha, validar authSource, IP e URL-encoding (automático no modo de variáveis separadas)
+
+## 🖥️ Cliente Streamlit (opcional/legado)
+
+Se quiser usar o painel local como cliente offline (não integrado à API), basta:
+
+```bash
+streamlit run App.py
+```
+
+Observação: esse cliente usa o `db_service` (SQLite local) e não o backend FastAPI. Recomenda-se usar a API para dados unificados e gamificação completa.
+
+## 📦 Deploy
+
+- Projeto inclui Dockerfile, .dockerignore e Procfile (produção com Gunicorn/UvicornWorker)
+- Health check: `/health/db`
+- Para Render (sugestão), configure as variáveis de ambiente e aponte para o Dockerfile. Veja também `render.yaml` e `DEPLOY.md` para um guia rápido.
+
+## �️ Estrutura do projeto (resumo)
+
+- `api.py` → FastAPI (JWT, endpoints PT-BR, CORS, seleção de backend)
+- `services/db_service.py` → SQLite
+- `services/mongo_service.py` → MongoDB Atlas (PyMongo)
+- `util/calculos_util.py` → cálculos de pegada
+- `config/dicas.py`, `config/fatores_emissao.py` → dados de apoio
+- `App.py` → Streamlit opcional (local/legado)
+- `Dockerfile`, `.dockerignore`, `Procfile`, `render.yaml`, `DEPLOY.md`
 
 ## 🤝 Contribuições
 
-Contribuições são bem-vindas\! Se você tiver ideias para melhorias, novas categorias de cálculo, dicas de redução ou qualquer outra funcionalidade, sinta-se à vontade para abrir uma *issue* ou enviar um *pull request*.
+Contribuições são bem-vindas! Sinta-se à vontade para abrir uma issue / PR.
 
 ## 📄 Licença
 
-Este projeto está licenciado sob a licença [MIT].
-
------
+MIT

@@ -3,4 +3,9 @@ mysql-connector-python
 pandas
 plotly
 python-dotenv
-passlib
+passlib[bcrypt]
+fastapi
+uvicorn
+python-jose[cryptography]
+pymongo[srv]
+gunicorn

@@ -103,3 +103,102 @@ def calcular_creditos_sustentaveis(num_arvores_plantadas_mensal, kg_creditos_car
     total += num_arvores_plantadas_mensal * FATORES_EMISSAO["sustentavel"]["arvores_plantadas"]
     total += kg_creditos_carbono * FATORES_EMISSAO["sustentavel"]["creditos_carbono_kg"]
     return total
+
+# Função agregadora: calcula a pegada total
+def calcular_pegada_completa(inputs):
+    """
+    Recebe um dicionário de dados e retorna a pegada total e por categoria.
+    """
+    # Energia
+    pegada_energia = calcular_pegada_energia(
+        inputs.get("consumo_energia_kwh", 0.0),
+        inputs.get("num_botijoes_gas_13kg", 0.0)
+    )
+
+    # Transporte individual combustivel
+    total_transporte_combustivel = 0
+    if inputs.get("usa_carro_moto_combustivel", False):
+        total_transporte_combustivel = calcular_pegada_transporte_individual_combustivel(
+            inputs.get("distancia_carro_moto_combustivel", 0.0),
+            inputs.get("tipo_combustivel", "gasolina")
+        )
+
+    # Transporte elétrico
+    total_transporte_eletrico = 0
+    if inputs.get("usa_veiculo_eletrico", False):
+        total_transporte_eletrico = calcular_pegada_transporte_eletrico(
+            inputs.get("distancia_veiculo_eletrico", 0.0),
+            inputs.get("tipo_veiculo_eletrico", "carro_eletrico")
+        )
+
+    # Transporte coletivo
+    total_transporte_coletivo = (
+        calcular_pegada_transporte_coletivo(inputs.get("km_onibus", 0.0), "onibus") +
+        calcular_pegada_transporte_coletivo(inputs.get("km_metro", 0.0), "metro") +
+        calcular_pegada_transporte_coletivo(inputs.get("km_aviao_domestico", 0.0), "aviao_domestico") +
+        calcular_pegada_transporte_coletivo(inputs.get("km_aviao_internacional", 0.0), "aviao_internacional")
+    )
+    pegada_transporte = total_transporte_combustivel + total_transporte_eletrico + total_transporte_coletivo
+
+    # Alimentação
+    pegada_alimentacao = calcular_pegada_alimentacao(
+        inputs.get("kg_carne_bovina", 0.0), inputs.get("kg_carne_suina", 0.0), inputs.get("kg_frango", 0.0), inputs.get("kg_peixe", 0.0),
+        inputs.get("litros_leite", 0.0), inputs.get("kg_queijo", 0.0), inputs.get("duzias_ovo", 0.0), inputs.get("kg_arroz", 0.0), inputs.get("kg_feijao", 0.0), inputs.get("kg_vegetais", 0.0)
+    )
+
+    # Habitação
+    horas_ar_condicionado_mensal = inputs.get("horas_ar_condicionado_dia", 0.0) * 30
+    horas_aquecedor_mensal = inputs.get("horas_aquecedor_dia", 0.0) * 30
+    pegada_habitacao = calcular_pegada_habitacao(
+        inputs.get("num_comodos", 1),
+        horas_ar_condicionado_mensal,
+        horas_aquecedor_mensal
+    )
+
+    # Consumo
+    pegada_consumo = calcular_pegada_consumo(
+        inputs.get("num_celulares", 0.0), inputs.get("num_laptops", 0.0), inputs.get("num_geladeiras", 0.0),
+        inputs.get("num_televisoes", 0.0), inputs.get("num_veiculos_eletricos_consumo", 0.0), inputs.get("num_roupas_peca", 0.0)
+    )
+
+    # Resíduos
+    pegada_residuos = calcular_pegada_residuos(
+        inputs.get("num_sacos_lixo_100l", 0.0), inputs.get("kg_lixo_reciclavel", 0.0), inputs.get("kg_eletronico", 0.0), inputs.get("kg_compostagem", 0.0)
+    )
+
+    # Estilo de vida
+    horas_streaming_mensal = inputs.get("horas_streaming_dia", 0.0) * 30
+    pegada_estilo_vida = calcular_pegada_estilo_vida(
+        inputs.get("num_voos_eventos_ano", 0), horas_streaming_mensal, inputs.get("num_compras_online_mes", 0)
+    )
+
+    # Créditos sustentáveis
+    creditos_sustentaveis = calcular_creditos_sustentaveis(
+        inputs.get("num_arvores_plantadas_mensal", 0.0), inputs.get("kg_creditos_carbono", 0.0)
+    )
+
+    pegada_total = (
+        pegada_energia +
+        pegada_transporte +
+        pegada_alimentacao +
+        pegada_habitacao +
+        pegada_consumo +
+        pegada_residuos +
+        pegada_estilo_vida +
+        creditos_sustentaveis
+    )
+
+    pegadas_por_categoria = {
+        "energia_combustivel": pegada_energia,
+        "transporte": pegada_transporte,
+        "alimentacao": pegada_alimentacao,
+        "habitacao": pegada_habitacao,
+        "consumo": pegada_consumo,
+        "residuos": pegada_residuos,
+        "estilo_vida": pegada_estilo_vida
+    }
+
+    return {
+        "pegada_total": pegada_total,
+        "pegadas_por_categoria": pegadas_por_categoria
+    }
