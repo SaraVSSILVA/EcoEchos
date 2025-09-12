@@ -27,8 +27,23 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 class MongoService:
     def __init__(self, uri: str, dbname: str):
-        # Usa cadeia de certificados do certifi para evitar erros de TLS em ambientes minimalistas (ex.: Docker/Render)
-        self.client = MongoClient(uri, server_api=ServerApi('1'), tlsCAFile=certifi.where())
+        # Configurações TLS
+        tls_insecure = str(os.getenv("MONGODB_TLS_INSECURE", "")).lower() in ("1", "true", "yes")
+        tls_allow_invalid_hostnames = str(os.getenv("MONGODB_TLS_ALLOW_INVALID_HOSTNAMES", "")).lower() in ("1", "true", "yes")
+        ca_bundle = str(os.getenv("MONGODB_TLS_CA_BUNDLE", "")).strip()
+
+        # Usa cadeia de certificados do certifi por padrão; permite override via MONGODB_TLS_CA_BUNDLE
+        ca_file = ca_bundle if ca_bundle else certifi.where()
+
+        # Torna TLS explícito e aplica opções de diagnóstico quando necessário
+        self.client = MongoClient(
+            uri,
+            server_api=ServerApi('1'),
+            tls=True,
+            tlsCAFile=ca_file,
+            tlsAllowInvalidCertificates=tls_insecure,
+            tlsAllowInvalidHostnames=tls_allow_invalid_hostnames,
+        )
         self.db = self.client[dbname]
         self.users: Collection = self.db["users"]
         self.daily: Collection = self.db["daily_data"]
