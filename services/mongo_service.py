@@ -8,6 +8,7 @@ from pymongo import ASCENDING, DESCENDING
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from pymongo.collection import Collection
+import certifi
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -26,7 +27,8 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 class MongoService:
     def __init__(self, uri: str, dbname: str):
-        self.client = MongoClient(uri, server_api=ServerApi('1'))
+        # Usa cadeia de certificados do certifi para evitar erros de TLS em ambientes minimalistas (ex.: Docker/Render)
+        self.client = MongoClient(uri, server_api=ServerApi('1'), tlsCAFile=certifi.where())
         self.db = self.client[dbname]
         self.users: Collection = self.db["users"]
         self.daily: Collection = self.db["daily_data"]

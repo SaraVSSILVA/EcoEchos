@@ -9,3 +9,4 @@ uvicorn
 python-jose[cryptography]
 pymongo[srv]
 gunicorn
+certifi

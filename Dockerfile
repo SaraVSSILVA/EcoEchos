@@ -7,6 +7,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+# Add system CA certificates (for TLS to external services like MongoDB Atlas)
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
+
 # Install dependencies
 COPY requirements.txt ./
 RUN pip install --upgrade pip && \
